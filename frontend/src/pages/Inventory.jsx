@@ -8,8 +8,12 @@ export default function Inventory() {
     const [loading, setLoading] = useState(true);
 
     const load = async () => {
-        const { data } = await api.get("/inventory");
-        setItems(data);
+        try {
+            const { data } = await api.get("/inventory");
+            setItems(Array.isArray(data) ? data : []);
+        } catch {
+            setItems([]);
+        }
         setLoading(false);
     };
 

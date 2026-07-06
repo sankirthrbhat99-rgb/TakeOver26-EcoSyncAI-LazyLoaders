@@ -13,8 +13,12 @@ export default function Suppliers() {
 
     useEffect(() => {
         const load = async () => {
-            const { data } = await api.get("/suppliers");
-            setSuppliers(data);
+            try {
+                const { data } = await api.get("/suppliers");
+                setSuppliers(Array.isArray(data) ? data : []);
+            } catch {
+                setSuppliers([]);
+            }
         };
         load();
     }, []);

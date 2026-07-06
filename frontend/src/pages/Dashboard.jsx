@@ -40,7 +40,7 @@ export default function Dashboard() {
         return () => { alive = false; clearInterval(t); };
     }, []);
 
-    const series = (stats?.carbon_series || []).map((p, i) => ({
+    const series = ((stats && stats.carbon_series) || []).map((p, i) => ({
         idx: i + 1,
         kg: p.cumulative_kg,
         supplier: p.supplier,

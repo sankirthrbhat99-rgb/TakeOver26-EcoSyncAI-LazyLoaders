@@ -34,7 +34,7 @@ export default function AgentTerminal({ height = "h-80", fillHeight = false }) {
             try {
                 const { data } = await api.get("/agent-logs?limit=250");
                 if (!alive) return;
-                setLogs(data);
+                setLogs(Array.isArray(data) ? data : []);
                 setConnected(true);
             } catch {
                 setConnected(false);

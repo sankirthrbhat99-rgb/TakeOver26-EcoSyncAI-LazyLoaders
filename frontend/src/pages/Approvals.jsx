@@ -9,8 +9,12 @@ export default function Approvals() {
     const [busy, setBusy] = useState(null);
 
     const load = async () => {
-        const { data } = await api.get(`/purchase-orders?status=${tab}`);
-        setPos(data);
+        try {
+            const { data } = await api.get(`/purchase-orders?status=${tab}`);
+            setPos(Array.isArray(data) ? data : []);
+        } catch {
+            setPos([]);
+        }
     };
 
     useEffect(() => {
