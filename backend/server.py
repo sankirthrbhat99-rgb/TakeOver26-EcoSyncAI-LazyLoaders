@@ -372,6 +372,11 @@ async def approve_po(po_id: str, user: dict = Depends(get_current_user)):
         {"$inc": {"current_stock": po['quantity']}},
     )
     await add_log(
+        "System",
+        f"✅ SUCCESS: Purchase Order approved by human operator. Dispatching RFQ to vendor email {po['supplier_email']}.",
+        "completed",
+    )
+    await add_log(
         "Procurement Agent",
         f"Purchase Order Approved - Dispatching RFQ to {po['supplier_name']} <{po['supplier_email']}>. +{po['quantity']} units of {po['inventory_name']} inbound. Est. carbon saved: {po['carbon_saved_kg']} kg.",
         "completed",

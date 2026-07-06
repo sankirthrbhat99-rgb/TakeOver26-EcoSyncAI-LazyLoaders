@@ -21,12 +21,15 @@ export default function Approvals() {
 
     const approve = async (id) => {
         setBusy(id);
+        // Optimistic UI: remove from pending list immediately
+        setPos((prev) => prev.filter((p) => p.id !== id));
         try {
             await api.post(`/purchase-orders/${id}/approve`);
             toast.success("Purchase order approved — RFQ dispatched.");
             load();
         } catch {
             toast.error("Approval failed.");
+            load();
         }
         setBusy(null);
     };
