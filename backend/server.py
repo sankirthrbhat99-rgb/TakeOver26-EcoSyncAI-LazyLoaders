@@ -17,12 +17,12 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
 
 # ----- Config -----
-MONGO_URL = os.environ['MONGO_URL']
-DB_NAME = os.environ['DB_NAME']
-JWT_SECRET = os.environ['JWT_SECRET']
+MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+DB_NAME = os.environ.get('DB_NAME', 'ecosync')
+JWT_SECRET = os.environ.get('JWT_SECRET', 'super_secret_dummy_jwt_key_2026')
 JWT_ALGO = "HS256"
-ADMIN_EMAIL = os.environ['ADMIN_EMAIL']
-ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@ecosync.ai')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'EcoSync2026!')
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
@@ -31,9 +31,122 @@ REORDER_QUANTITY_DEFAULT = 100
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("ecosync")
 
-# ----- DB -----
-client = AsyncIOMotorClient(MONGO_URL)
-db = client[DB_NAME]
+# ----- Mock DB implementation for offline/zero-config fallback -----
+class MockCursor:
+    def __init__(self, data):
+        self.data = data
+        self.index = 0
+
+    def sort(self, key, direction=-1):
+        reverse = (direction == -1)
+        self.data = sorted(self.data, key=lambda x: x.get(key, ""), reverse=reverse)
+        return self
+
+    async def to_list(self, limit=None):
+        if limit is not None:
+            return self.data[:limit]
+        return self.data
+
+    def __aiter__(self):
+        self.index = 0
+        return self
+
+    async def __anext__(self):
+        if self.index >= len(self.data):
+            raise StopAsyncIteration
+        val = self.data[self.index]
+        self.index += 1
+        return val
+
+class MockCollection:
+    def __init__(self, name):
+        self.name = name
+        self.docs = []
+
+    async def create_index(self, keys, unique=False):
+        pass
+
+    async def count_documents(self, query):
+        return len([d for d in self.docs if self._matches(d, query)])
+
+    def _matches(self, doc, query):
+        if not query:
+            return True
+        for k, v in query.items():
+            if k not in doc or doc[k] != v:
+                return False
+        return True
+
+    def _project(self, doc, projection):
+        if not projection:
+            return doc.copy()
+        res = doc.copy()
+        for k, v in projection.items():
+            if v == 0:
+                res.pop(k, None)
+        return res
+
+    async def find_one(self, query, projection=None):
+        for d in self.docs:
+            if self._matches(d, query):
+                return self._project(d, projection)
+        return None
+
+    def find(self, query=None, projection=None):
+        query = query or {}
+        matched = [self._project(d, projection) for d in self.docs if self._matches(d, query)]
+        return MockCursor(matched)
+
+    async def insert_one(self, doc):
+        import copy
+        self.docs.append(copy.deepcopy(doc))
+        return doc
+
+    async def insert_many(self, docs):
+        import copy
+        self.docs.extend(copy.deepcopy(docs))
+        return docs
+
+    async def update_one(self, query, update_op):
+        for d in self.docs:
+            if self._matches(d, query):
+                if "$set" in update_op:
+                    for k, v in update_op["$set"].items():
+                        d[k] = v
+                if "$inc" in update_op:
+                    for k, v in update_op["$inc"].items():
+                        d[k] = d.get(k, 0) + v
+                return d
+        return None
+
+class MockDatabase:
+    def __init__(self):
+        self._collections = {}
+
+    def __getattr__(self, name):
+        if name not in self._collections:
+            self._collections[name] = MockCollection(name)
+        return self._collections[name]
+
+    def __getitem__(self, name):
+        return self.__getattr__(name)
+
+# ----- DB Selection / Fallback -----
+import pymongo
+try:
+    # Fast test connection
+    sync_client = pymongo.MongoClient(MONGO_URL, serverSelectionTimeoutMS=1000)
+    sync_client.server_info()
+    logger.info("MongoDB is running. Connecting with AsyncIOMotorClient...")
+    client = AsyncIOMotorClient(MONGO_URL)
+    db = client[DB_NAME]
+except Exception as e:
+    logger.warning(f"MongoDB connection failed: {e}. Falling back to in-memory MockDatabase.")
+    class MockClient:
+        def close(self):
+            pass
+    client = MockClient()
+    db = MockDatabase()
 
 # ----- App / Router -----
 app = FastAPI(title="EcoSync AI")
