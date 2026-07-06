@@ -86,6 +86,11 @@ export default function Inventory() {
                                         <span className={warn ? "text-[#D97706] font-semibold" : "text-[#1E293B] font-medium"}>
                                             {it.current_stock}
                                         </span>
+                                        {warn && (
+                                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-[#FEF3C7] text-[#D97706] border border-[#FDE68A]" data-testid={`status-badge-${it.id}`}>
+                                                Low Stock Alert
+                                            </span>
+                                        )}
                                     </td>
                                     <td className="p-4 text-slate-600">{it.safety_threshold}</td>
                                     <td className="p-4 text-slate-600">{it.reorder_quantity}</td>

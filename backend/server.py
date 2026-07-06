@@ -311,6 +311,8 @@ async def me(user: dict = Depends(get_current_user)):
 @api.get("/inventory")
 async def list_inventory(user: dict = Depends(get_current_user)):
     items = await db.inventory.find({}, {"_id": 0}).to_list(1000)
+    for it in items:
+        it['status'] = "Low Stock Alert" if it['current_stock'] <= it['safety_threshold'] else "OK"
     return items
 
 @api.post("/inventory/{item_id}/consume")
@@ -470,6 +472,47 @@ async def seed():
     if await db.agent_logs.count_documents({}) == 0:
         await add_log("System", "EcoSync AI initialised. Multi-agent supply chain worker is online.", "completed")
 
+# ----- Background monitor -----
+async def background_monitor():
+    """Continuously scans inventory; triggers agent loop for any low-stock item
+    that does not already have a pending RFQ awaiting approval."""
+    while True:
+        try:
+            await asyncio.sleep(30)
+            async for item in db.inventory.find({}, {"_id": 0}):
+                if item['current_stock'] <= item['safety_threshold']:
+                    exists = await db.purchase_orders.find_one({
+                        "inventory_id": item['id'], "status": "pending_review"
+                    })
+                    if not exists:
+                        asyncio.create_task(run_agent_loop(item['id']))
+        except Exception as e:
+            logger.warning(f"Background monitor cycle failed: {e}")
+
+
+async def ensure_demo_low_stock_event():
+    """On startup: if nothing is currently low and no pending RFQ exists,
+    artificially drop one item below its safety threshold so the operator
+    always sees the full multi-agent chain when opening the dashboard."""
+    items = await db.inventory.find({}, {"_id": 0}).to_list(1000)
+    any_low = any(i['current_stock'] <= i['safety_threshold'] for i in items)
+    pending = await db.purchase_orders.find_one({"status": "pending_review"})
+    logger.info(f"Demo injection check: any_low={any_low} pending_exists={pending is not None}")
+    if any_low or pending:
+        return
+    if not items:
+        return
+    item = items[0]
+    new_stock = max(0, item['safety_threshold'] - 5)
+    await db.inventory.update_one({"id": item['id']}, {"$set": {"current_stock": new_stock}})
+    await add_log(
+        "System",
+        f"Demo low-stock event injected: {item['item_name']} dropped to {new_stock} {item['unit']} (threshold {item['safety_threshold']}).",
+        "completed",
+    )
+    asyncio.create_task(run_agent_loop(item['id']))
+
+
 @app.on_event("startup")
 async def on_startup():
     await db.users.create_index("email", unique=True)
@@ -485,6 +528,10 @@ async def on_startup():
             exists = await db.purchase_orders.find_one({"inventory_id": item['id'], "status": "pending_review"})
             if not exists:
                 asyncio.create_task(run_agent_loop(item['id']))
+    # Guarantee at least one demo agent chain runs on every fresh reload
+    await ensure_demo_low_stock_event()
+    # Persistent background monitor
+    asyncio.create_task(background_monitor())
 
 @app.on_event("shutdown")
 async def on_shutdown():
