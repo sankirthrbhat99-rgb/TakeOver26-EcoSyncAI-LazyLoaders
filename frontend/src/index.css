@@ -96,16 +96,15 @@ h1, h2, h3, h4, h5, h6 {
     border-left-color: #22C55E;
 }
 
-/* Terminal scrollbar */
+/* Terminal scrollbar - fully hidden but scrollable */
 .terminal-scroll::-webkit-scrollbar {
-    width: 8px;
+    width: 0;
+    height: 0;
+    display: none;
 }
-.terminal-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-.terminal-scroll::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 4px;
+.terminal-scroll {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 /* Subtle pulse for active thinking status */

@@ -68,8 +68,8 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 eco-card p-6" data-testid="carbon-chart-card">
-                    <div className="flex items-start justify-between mb-6">
+                <div className="lg:col-span-2 eco-card p-6 h-[440px] flex flex-col" data-testid="carbon-chart-card">
+                    <div className="flex items-start justify-between mb-6 shrink-0">
                         <div>
                             <h3 className="text-lg font-semibold text-[#1E293B]" style={{ fontFamily: "Outfit" }}>Cumulative CO₂ saved</h3>
                             <p className="text-xs text-slate-500 mt-1">Kilograms avoided by choosing lower-carbon suppliers over traditional worst-in-class alternatives.</p>
@@ -79,7 +79,7 @@ export default function Dashboard() {
                             <div className="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Lifetime</div>
                         </div>
                     </div>
-                    <div className="h-64 relative">
+                    <div className="flex-1 min-h-0 relative">
                         {series.length === 0 && (
                             <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-500 italic pointer-events-none z-10">
                                 No approved orders yet. Approve a green RFQ to see savings compound.
@@ -107,11 +107,11 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <div className="eco-card p-6" data-testid="dashboard-terminal-preview">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="eco-card p-6 flex flex-col h-[440px] overflow-hidden" data-testid="dashboard-terminal-preview">
+                    <div className="flex items-center justify-between mb-4 shrink-0">
                         <h3 className="text-lg font-semibold text-[#1E293B]" style={{ fontFamily: "Outfit" }}>Live agent activity</h3>
                     </div>
-                    <AgentTerminal height="h-64" />
+                    <AgentTerminal fillHeight />
                 </div>
             </div>
         </div>

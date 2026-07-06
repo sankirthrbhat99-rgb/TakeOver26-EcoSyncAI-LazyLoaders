@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 
-const AGENT_COLORS = {
-    "Demand Forecaster": "text-sky-400",
-    "Eco-Scout": "text-emerald-400",
-    "Procurement Agent": "text-amber-400",
-    "System": "text-slate-400",
+const AGENT_STYLE = {
+    "Demand Forecaster": { color: "#F59E0B", emoji: "⚠️" },
+    "Eco-Scout":         { color: "#10B981", emoji: "🔍" },
+    "Procurement Agent": { color: "#38BDF8", emoji: "📝" },
+    "System":            { color: "#94A3B8", emoji: "•"  },
 };
 
 const STATUS_STYLES = {
-    thinking: "text-slate-400 italic",
+    thinking:  "text-slate-500 italic",
     executing: "text-emerald-400 eco-pulse",
-    completed: "text-slate-300",
+    completed: "text-slate-400",
 };
 
 function fmtTime(ts) {
@@ -23,7 +23,7 @@ function fmtTime(ts) {
     }
 }
 
-export default function AgentTerminal({ height = "h-80" }) {
+export default function AgentTerminal({ height = "h-80", fillHeight = false }) {
     const [logs, setLogs] = useState([]);
     const [connected, setConnected] = useState(false);
     const scrollRef = useRef(null);
@@ -54,9 +54,16 @@ export default function AgentTerminal({ height = "h-80" }) {
         }
     }, [logs]);
 
+    const wrapperCls = fillHeight
+        ? "eco-card-solid overflow-hidden flex flex-col flex-1 min-h-0"
+        : "eco-card-solid overflow-hidden flex flex-col";
+    const scrollCls = fillHeight
+        ? "terminal-scroll bg-[#0F172A] flex-1 min-h-0 overflow-y-auto p-4 font-mono text-xs leading-relaxed"
+        : `terminal-scroll bg-[#0F172A] ${height} overflow-y-auto p-4 font-mono text-xs leading-relaxed`;
+
     return (
-        <div className="eco-card-solid overflow-hidden" data-testid="live-agent-terminal">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100">
+        <div className={wrapperCls} data-testid="live-agent-terminal">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 shrink-0">
                 <div className="flex items-center gap-2">
                     <div className="flex gap-1.5">
                         <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
@@ -70,26 +77,28 @@ export default function AgentTerminal({ height = "h-80" }) {
                     {connected ? "streaming · 2s polling" : "reconnecting"}
                 </div>
             </div>
-            <div
-                ref={scrollRef}
-                className={`terminal-scroll bg-[#0F172A] ${height} overflow-y-auto p-4 font-mono text-xs leading-relaxed`}
-                data-testid="terminal-log-list"
-            >
+            <div ref={scrollRef} className={scrollCls} data-testid="terminal-log-list">
                 {logs.length === 0 && (
                     <div className="text-slate-500 italic">Waiting for agent activity...</div>
                 )}
-                {logs.map((log) => (
-                    <div key={log.id} className="flex gap-3 py-1 border-b border-slate-800/40 last:border-0 eco-fade-in">
-                        <span className="text-slate-500 shrink-0 w-16">{fmtTime(log.timestamp)}</span>
-                        <span className={`shrink-0 w-40 ${AGENT_COLORS[log.agent_name] || "text-slate-300"}`}>
-                            [{log.agent_name}]
-                        </span>
-                        <span className={`shrink-0 w-24 ${STATUS_STYLES[log.current_status] || ""}`}>
-                            {log.current_status}
-                        </span>
-                        <span className="text-slate-300 flex-1 break-words">{log.message}</span>
-                    </div>
-                ))}
+                {logs.map((log) => {
+                    const style = AGENT_STYLE[log.agent_name] || { color: "#CBD5E1", emoji: "•" };
+                    return (
+                        <div key={log.id} className="flex gap-3 py-1 border-b border-slate-800/40 last:border-0 eco-fade-in">
+                            <span className="shrink-0 w-16" style={{ color: "#64748B" }}>{fmtTime(log.timestamp)}</span>
+                            <span className="shrink-0 w-40 font-medium" style={{ color: style.color }}>
+                                [{log.agent_name}]
+                            </span>
+                            <span className={`shrink-0 w-20 ${STATUS_STYLES[log.current_status] || ""}`}>
+                                {log.current_status}
+                            </span>
+                            <span className="text-slate-200 flex-1 break-words">
+                                <span className="mr-1.5" aria-hidden>{style.emoji}</span>
+                                {log.message}
+                            </span>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
