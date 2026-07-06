@@ -1,0 +1,26 @@
+{
+  "summary": "First-finish smoke test of EcoSync AI. Backend: auth (login/me/401), seed (4 inventory + 13 suppliers across 4 types), boot-time agent loop producing 2 pending RFQs with non-empty LLM bodies and carbon_saved, manual trigger creates full 3-agent chain + new PO, consume drops stock and auto-triggers reorder, approve increments stock (+250, 80->330), 2nd approve returns 400, Purchase Order Approved log line present, dashboard stats + carbon_series populated after approval, Eco-Scout ranking verified (Nordic Alloys composite 0.469 = lowest for Steel Sheet). Frontend: /login renders, admin credentials log in and route to Dashboard, all 5 sidebar nav testids visible, Inventory trigger-reorder buttons work with success toast, Approvals shows <pre> RFQ email and approve-order-btn removes PO from pending, live-agent-terminal streams 36+ color-coded logs on TerminalPage.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login sets httpOnly cookie; GET /api/auth/me returns user; unauth /api/inventory -> 401",
+    "GET /api/inventory returns 4 items; Copper Wire (45/60) and Lithium (80/100) below threshold on first boot",
+    "GET /api/suppliers returns 13 suppliers across Steel Sheet(4), Copper Wire(3), Polymer Pellets(3), Lithium Cells(3)",
+    "Boot-time loop produced 2 pending POs with non-empty LLM RFQ bodies (~700-1000 chars), quantity == reorder_quantity, carbon_saved_kg > 0",
+    "POST /api/inventory/{steel}/trigger-reorder creates Demand Forecaster -> Eco-Scout -> Procurement Agent logs and new pending PO for Nordic Alloys",
+    "POST /api/inventory/{polymer}/consume?qty=999 drops stock to 0 and auto-generates new pending PO (PlastiCorp) within seconds",
+    "POST /api/purchase-orders/{id}/approve: stock 80->330 (+250), status=approved, Procurement Agent log 'Purchase Order Approved' present; second approve returns 400",
+    "Eco-Scout composite ranking (0.5*norm_price + 0.5*norm_carbon) verified for Steel Sheet -> Nordic Alloys correctly chosen",
+    "GET /api/dashboard/stats returns all required fields; carbon_series appended after approval (875 kg)",
+    "Frontend: /login (data-testid=login-page) -> Dashboard (data-testid=dashboard-page) with prefilled admin creds",
+    "Sidebar nav testids (nav-dashboard/inventory/suppliers/approvals/terminal) all visible & clickable",
+    "Inventory: 4 trigger-{id} buttons; clicking shows success toast",
+    "Approvals: RFQ email rendered in <pre>; approve-order-btn-{id} removes item from Pending (3->2)",
+    "Live Agent Terminal streams 36 color-coded log lines with timestamps and agent names; 2s polling label visible"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Non-blocking console warning from Recharts about container width(-1)/height(-1) at initial dashboard mount; chart still renders correctly. Consider adding minHeight to ResponsiveContainer to silence."
+}
