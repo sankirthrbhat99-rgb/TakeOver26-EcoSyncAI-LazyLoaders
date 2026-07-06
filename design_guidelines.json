@@ -1,0 +1,142 @@
+{
+  "theme_archetype": {
+    "theme": "Light",
+    "archetype": "1 (Organic & Earthy)",
+    "description": "Professional, corporate, grounding, organic B2B SaaS. Conveys trust, sustainability, and technical precision without feeling clinical."
+  },
+  "color_palette": {
+    "backgrounds": {
+      "canvas": "#F9F9FB",
+      "card": "#FFFFFF",
+      "terminal_bg": "#0F172A",
+      "sidebar": "#FFFFFF",
+      "hover_state": "#F1F5F9"
+    },
+    "text": {
+      "primary": "#1E293B",
+      "secondary": "#475569",
+      "terminal_text": "#CBD5E1",
+      "terminal_accent": "#E2E8F0"
+    },
+    "brand_accents": {
+      "primary_green": "#15803D",
+      "secondary_green": "#365314",
+      "carbon_score_good": "#16A34A",
+      "carbon_score_mid": "#CA8A04",
+      "carbon_score_poor": "#DC2626"
+    },
+    "alerts": {
+      "warning": "#B45309",
+      "warning_bg": "#FEF3C7",
+      "critical": "#991B1B",
+      "critical_bg": "#FEE2E2"
+    },
+    "rules": [
+      "Strictly avoid absolute black (#000000).",
+      "Avoid neon green/cyan gradients.",
+      "Terminal logs use variable opacity of light gray instead of saturated colors to prevent visual vibration."
+    ]
+  },
+  "typography": {
+    "fonts": {
+      "headings": "Outfit, sans-serif",
+      "body": "'IBM Plex Sans', sans-serif",
+      "terminal": "'JetBrains Mono', monospace"
+    },
+    "scales": {
+      "h1": "text-4xl font-semibold tracking-tight text-[#1E293B]",
+      "h2": "text-2xl font-semibold tracking-tight text-[#1E293B]",
+      "h3": "text-lg font-medium text-[#1E293B]",
+      "body": "text-sm text-[#475569] leading-relaxed",
+      "terminal": "text-xs font-mono tracking-tight leading-loose text-[#CBD5E1]",
+      "small_label": "text-xs font-semibold uppercase tracking-widest text-[#475569]"
+    },
+    "rules": [
+      "Never use Inter.",
+      "Do not center-align body text; stick to left-alignment for dense B2B SaaS data.",
+      "Use bold/heavy weights sparingly, primarily for KPIs or critical states."
+    ]
+  },
+  "layout_and_spacing": {
+    "structure": "Fixed left sidebar (w-64 or w-72) + flex-1 content dashboard pane.",
+    "grid_system": "The 'Control Room' Grid. grid-cols-1 md:grid-cols-3 lg:grid-cols-4 with gap-6. Tight density but clear hierarchy.",
+    "spacing": {
+      "card_padding": "p-6",
+      "section_gap": "gap-8",
+      "page_padding": "p-8 md:p-10"
+    },
+    "borders": "1px solid #E2E8F0. No soft floating shadows; use structural outlines or extremely subtle shadow-sm. Subtle roundness, max 8px border-radius. Avoid overly round web3-style buttons."
+  },
+  "components": {
+    "sidebar": {
+      "style": "bg-[#FFFFFF] border-r border-slate-200. Clean list items with left-aligned icons.",
+      "active_state": "bg-slate-50 border-l-4 border-[#15803D] text-[#15803D] font-medium"
+    },
+    "kpi_cards": {
+      "style": "bg-[#FFFFFF] border border-slate-200 rounded-lg p-6 flex flex-col justify-between",
+      "value_style": "text-3xl font-semibold text-[#1E293B] mt-2",
+      "label_style": "text-sm font-medium text-[#475569]"
+    },
+    "inventory_table": {
+      "style": "w-full text-left text-sm text-[#1E293B] border-collapse",
+      "header_style": "bg-slate-50 text-xs uppercase tracking-wider font-semibold text-[#475569] p-4 border-b border-slate-200",
+      "row_style": "border-b border-slate-100 hover:bg-slate-50 transition-colors",
+      "warning_row_style": "bg-[#FEF3C7] border-b border-[#FDE68A] hover:bg-[#FDE68A] transition-colors"
+    },
+    "carbon_score_badge": {
+      "style": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
+      "good": "bg-green-50 text-green-700 border-green-200",
+      "mid": "bg-yellow-50 text-yellow-700 border-yellow-200",
+      "poor": "bg-red-50 text-red-700 border-red-200"
+    },
+    "live_agent_terminal": {
+      "container": "bg-[#0F172A] rounded-lg border border-slate-800 p-4 h-64 overflow-y-auto font-mono text-xs shadow-inner",
+      "log_line": "flex gap-3 mb-2 border-b border-slate-800/50 pb-2 last:border-0",
+      "timestamp": "text-slate-500 shrink-0",
+      "agent_name": {
+        "Demand Forecaster": "text-blue-400 font-medium",
+        "Eco-Scout": "text-emerald-400 font-medium",
+        "Procurement Agent": "text-amber-400 font-medium"
+      },
+      "status_pill": {
+        "thinking": "text-slate-400 italic",
+        "executing": "text-emerald-400 animate-pulse",
+        "completed": "text-slate-300"
+      },
+      "message": "text-slate-300 flex-1"
+    },
+    "buttons": {
+      "primary": "bg-[#15803D] hover:bg-[#365314] text-white px-4 py-2 rounded-md font-medium transition-colors border border-transparent",
+      "secondary": "bg-white hover:bg-slate-50 text-[#1E293B] border border-slate-300 px-4 py-2 rounded-md font-medium transition-colors",
+      "danger": "bg-[#B45309] hover:bg-[#92400E] text-white px-4 py-2 rounded-md font-medium transition-colors"
+    }
+  },
+  "icons_and_assets": {
+    "icon_library": "@phosphor-icons/react",
+    "icon_style": "Weight: 'regular' or 'duotone' for active states. Consistent stroke width.",
+    "images": [
+      {
+        "category": "user_avatar",
+        "url": "https://images.pexels.com/photos/31880922/pexels-photo-31880922.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Professional headshot for the admin user profile"
+      },
+      {
+        "category": "company_logo",
+        "url": "https://images.unsplash.com/photo-1605954504017-d4b915908c9f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxsZWFmJTIwbG9nbyUyMGdyZWVuJTIwYWJzdHJhY3R8ZW58MHx8fHwxNzgyOTk0NTA2fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract green leaf serving as the EcoSync AI logo"
+      }
+    ]
+  },
+  "testing_and_accessibility": {
+    "data_testid_rule": "All interactive and key informational elements MUST include a data-testid attribute in kebab-case, role-based format (e.g., data-testid='approve-order-button', data-testid='terminal-log-list').",
+    "contrast": "Ensure all text against the canvas and terminal backgrounds meets WCAG AA standards. Hover states must be distinctly visible."
+  },
+  "instructions_to_main_agent": [
+    "Install required fonts: Outfit, IBM Plex Sans, and JetBrains Mono via Google Fonts.",
+    "Install @phosphor-icons/react for the icon library.",
+    "Implement Recharts for the cumulative carbon tons saved metric. Use #15803D as the primary line/area color.",
+    "Ensure Shadcn UI components (if used) are heavily customized to override the default 'Vercel' look, specifically applying the exact color palette and max 8px border-radius.",
+    "The Terminal Window MUST auto-scroll to the bottom as new logs arrive.",
+    "Ensure the layout strictly adheres to the fixed left sidebar and scrolling content pane paradigm."
+  ]
+}
