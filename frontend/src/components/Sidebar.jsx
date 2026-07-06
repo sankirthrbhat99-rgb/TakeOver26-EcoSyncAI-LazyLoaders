@@ -22,7 +22,7 @@ export default function Sidebar() {
     };
 
     return (
-        <aside className="w-64 shrink-0 flex flex-col bg-slate-900 text-slate-200 border-r border-slate-800" data-testid="app-sidebar">
+        <aside className="w-64 shrink-0 flex flex-col bg-[#09090B] text-[#E4E4E7] border-r border-white/5" data-testid="app-sidebar">
             <div className="px-6 py-6 border-b border-white/5">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-md bg-[#166534] text-white flex items-center justify-center shadow-[0_4px_12px_-2px_rgba(22,101,52,0.5)]">
@@ -30,7 +30,7 @@ export default function Sidebar() {
                     </div>
                     <div>
                         <div className="text-[15px] font-semibold text-white" style={{ fontFamily: "Outfit" }}>EcoSync AI</div>
-                        <div className="text-[10px] uppercase tracking-[0.18em] text-slate-400">Control Tower</div>
+                        <div className="text-[10px] uppercase tracking-[0.18em] text-[#E4E4E7]/60">Control Tower</div>
                     </div>
                 </div>
             </div>
@@ -59,22 +59,23 @@ export default function Sidebar() {
 
             <div className="border-t border-white/5 p-4">
                 <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-slate-100 font-medium">
+                    <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white font-medium">
                         {(user?.name || user?.email || "A").slice(0, 1).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                         <div className="text-sm font-medium text-white truncate" data-testid="sidebar-user-name">{user?.name || "Admin"}</div>
-                        <div className="text-xs text-slate-400 truncate">{user?.email}</div>
+                        <div className="text-xs text-[#E4E4E7]/70 truncate">{user?.email}</div>
                     </div>
                 </div>
                 <button
                     onClick={handleLogout}
                     data-testid="logout-btn"
-                    className="w-full inline-flex items-center gap-2 justify-center border border-white/10 text-slate-200 hover:bg-white/[0.04] hover:text-white rounded-md text-sm py-2 transition-colors"
+                    className="w-full inline-flex items-center gap-2 justify-center border border-white/10 text-[#E4E4E7] hover:bg-white/[0.04] hover:text-white rounded-md text-sm py-2 transition-colors"
                 >
                     <LogOut className="w-4 h-4" /> Log out
                 </button>
             </div>
         </aside>
     );
+}
 }
