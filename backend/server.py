@@ -153,9 +153,14 @@ app = FastAPI(title="EcoSync AI")
 api = APIRouter(prefix="/api")
 
 # CORS
+origins = [
+    "http://localhost:3000",
+    "https://ecosyncai.netlify.app"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
