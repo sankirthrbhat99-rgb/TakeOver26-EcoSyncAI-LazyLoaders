@@ -11,7 +11,14 @@ export function AuthProvider({ children }) {
         try {
             const { data } = await api.get("/auth/me");
             setUser(data);
-        } catch {
+        } catch (error) {
+            // Silently catch 401 Unauthorized errors (expected when not logged in)
+            if (error.response && error.response.status === 401) {
+                // Do nothing, just let it fail quietly
+            } else {
+                // Only log actual unexpected errors
+                console.error("Session check failed:", error);
+            }
             setUser(false);
         }
     }, []);
