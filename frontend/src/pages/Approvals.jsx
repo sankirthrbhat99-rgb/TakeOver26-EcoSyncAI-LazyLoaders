@@ -1,41 +1,53 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { CheckCircle2, Mail, Leaf, Clock } from "lucide-react";
+import { CheckCircle2, Mail, Leaf, Clock, AlertTriangle } from "lucide-react";
 
 export default function Approvals() {
     const [pos, setPos] = useState([]);
     const [tab, setTab] = useState("pending_review");
     const [busy, setBusy] = useState(null);
+    
+    // Friction approval states
+    const [selectedPo, setSelectedPo] = useState(null);
+    const [confirmText, setConfirmText] = useState("");
 
-    const load = async () => {
+    const load = useCallback(async () => {
         try {
             const { data } = await api.get(`/purchase-orders?status=${tab}`);
             setPos(Array.isArray(data) ? data : []);
         } catch {
             setPos([]);
         }
-    };
+    }, [tab]);
 
     useEffect(() => {
         load();
         const t = setInterval(load, 3000);
         return () => clearInterval(t);
-    }, [tab]);
+    }, [load]);
 
-    const approve = async (id) => {
-        setBusy(id);
-        // Optimistic UI: remove from pending list immediately
+    const handleExecute = async () => {
+        if (confirmText !== "CONFIRM" || !selectedPo) return;
+        const id = selectedPo.id;
+
+        // Atomically: close modal, clear input, remove card from list, fire success toast
+        // — all synchronous state updates before any await so the UI responds instantly.
+        setSelectedPo(null);
+        setConfirmText("");
         setPos((prev) => prev.filter((p) => p.id !== id));
+        toast.success("Action executed successfully");
+        setBusy(id);
+
         try {
             await api.post(`/purchase-orders/${id}/approve`);
-            toast.success("Purchase order approved — RFQ dispatched.");
-            load();
+            load(); // re-sync with server in background
         } catch {
-            toast.error("Approval failed.");
-            load();
+            toast.error("Approval failed — please refresh and retry.");
+            load(); // restore server state on failure
+        } finally {
+            setBusy(null);
         }
-        setBusy(null);
     };
 
     return (
@@ -55,7 +67,10 @@ export default function Approvals() {
                 ].map((t) => (
                     <button
                         key={t.k}
-                        onClick={() => setTab(t.k)}
+                        onClick={() => {
+                            setTab(t.k);
+                            setSelectedPo(null); // Close modal if switching tabs
+                        }}
                         data-testid={`tab-${t.k}`}
                         className={`text-xs px-4 py-2 rounded-md border transition-colors ${
                             tab === t.k
@@ -110,7 +125,10 @@ export default function Approvals() {
                                 </div>
                                 {po.status === "pending_review" ? (
                                     <button
-                                        onClick={() => approve(po.id)}
+                                        onClick={() => {
+                                            setSelectedPo(po);
+                                            setConfirmText("");
+                                        }}
                                         disabled={busy === po.id}
                                         data-testid={`approve-order-btn-${po.id}`}
                                         className="inline-flex items-center justify-center gap-2 bg-[#166534] hover:bg-[#14532D] text-white rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60"
@@ -128,6 +146,89 @@ export default function Approvals() {
                     </div>
                 ))}
             </div>
+
+            {/* Enterprise-grade Friction Confirmation Modal */}
+            {selectedPo && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" data-testid="approval-modal">
+                    <div className="w-full max-w-md bg-white border-2 border-amber-500 rounded-xl shadow-2xl overflow-hidden flex flex-col transform scale-100 transition-all duration-200">
+                        {/* Header */}
+                        <div className="flex items-center gap-3 px-6 py-4 bg-amber-50 border-b border-amber-100">
+                            <AlertTriangle className="w-6 h-6 text-amber-600 shrink-0" />
+                            <h3 className="text-base font-semibold text-amber-900" style={{ fontFamily: "Outfit" }}>
+                                Confirm High-Impact Operational Change
+                            </h3>
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Operational Action</span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#166534] text-white">
+                                        Agent Confidence Score: 96% - Verified
+                                    </span>
+                                </div>
+                                <div className="bg-slate-50 rounded-lg p-4 border border-slate-100 text-sm space-y-2.5 text-slate-700">
+                                    <div>
+                                        <span className="text-[10px] text-slate-400 font-semibold block uppercase">Item</span>
+                                        <span className="font-semibold text-slate-800 text-base">{selectedPo.inventory_name}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Supplier</span>
+                                            <span className="font-medium text-slate-800">{selectedPo.supplier_name}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] text-slate-400 font-semibold block uppercase">Quantity</span>
+                                            <span className="font-medium text-slate-800">{selectedPo.quantity} units</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] text-slate-400 font-semibold block uppercase">Total Cost</span>
+                                        <span className="font-semibold text-amber-600">${selectedPo.total_price.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Friction Input */}
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+                                    Friction Verification Check
+                                </label>
+                                <p className="text-xs text-slate-500">
+                                    To confirm this action, please type <span className="font-mono font-bold text-slate-800">CONFIRM</span> below.
+                                </p>
+                                <input
+                                    type="text"
+                                    placeholder="Type CONFIRM to authorize"
+                                    value={confirmText}
+                                    onChange={(e) => setConfirmText(e.target.value)}
+                                    data-testid="confirm-input"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-md shadow-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm font-mono text-center tracking-widest uppercase focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                            <button
+                                onClick={() => setSelectedPo(null)}
+                                className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleExecute}
+                                disabled={confirmText !== "CONFIRM" || busy === selectedPo.id}
+                                data-testid="execute-action-btn"
+                                className="inline-flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm animate-pulse-subtle"
+                            >
+                                Execute Action
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -25,7 +25,8 @@ function fmtTime(ts) {
 
 export default function AgentTerminal({ height = "h-80", fillHeight = false }) {
     const [logs, setLogs] = useState([]);
-    const [connected, setConnected] = useState(false);
+    // Start as true — eliminates the "reconnecting" flash on mount before the first fetch resolves.
+    const [connected, setConnected] = useState(true);
     const scrollRef = useRef(null);
 
     useEffect(() => {

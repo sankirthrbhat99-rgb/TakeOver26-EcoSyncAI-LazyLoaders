@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Zap, Minus } from "lucide-react";
@@ -7,21 +7,27 @@ export default function Inventory() {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const load = async () => {
+    // Fix 6: useCallback so the function reference is stable and can be safely
+    // listed in the useEffect dependency array (eliminates exhaustive-deps warning).
+    const load = useCallback(async () => {
         try {
             const { data } = await api.get("/inventory");
             setItems(Array.isArray(data) ? data : []);
         } catch {
             setItems([]);
+        } finally {
+            // Fix 7: finally guarantees setLoading(false) runs even when the
+            // API throws, preventing an infinite loading spinner during a demo.
+            setLoading(false);
         }
-        setLoading(false);
-    };
+    }, []);
 
     useEffect(() => {
         load();
         const t = setInterval(load, 3000);
         return () => clearInterval(t);
-    }, []);
+    // Fix 6 (cont.): load is now stable so adding it here is safe and correct.
+    }, [load]);
 
     const consume = async (id, qty = 30) => {
         try {
